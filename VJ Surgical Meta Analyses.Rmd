@@ -271,6 +271,34 @@ order(df.PR$Method)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Main Subplots all-in-1
 
 
@@ -296,7 +324,11 @@ y_end = 120
 ilab_x_1 = -1
 ilab_x_2 = -0.8
 
-gap =0
+gap =5
+
+y_end = y_end + gap*7
+
+fontsize = 0.25
 
 ```
 
@@ -328,7 +360,7 @@ df.PR.rma <- rma(df.PR, slab=Study, method="REML", weighted=TRUE,
 
 
 
-#forest plots 
+#forest plots # rwos is bottom up
 forest(df.PR.rma, 
        header=c("Surgical Techniques and Studies", "Proportion Seizure Free [95% CI]", cex=2),
        mlab="",  #"Random Effects",
@@ -337,17 +369,17 @@ forest(df.PR.rma,
        order=order(df.PR$Method),
        at=c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0), 
        xlim=c(x_begin, 1.5), 
-       refline=NA,
+       refline=0.666,
        # showweights = TRUE,
        ylim=c(y_begin, y_end),
-       rows=c(3:(3+22), (30+gap):(30+14+gap), (49+gap):(49+13+gap), (49+13+5+gap):(74+gap), (79+gap):(92+gap), (97+gap):(97+8-1+gap), (97+8-1+5+gap):(110+gap), (115+gap):(115+gap)),
-       cex=0.3,
+       rows=c(3:(3+22), (30+gap):(30+14+gap), (49+gap*2):(49+13+gap*2), (49+13+5+gap*3):(74+gap*3), (79+gap*4):(92+gap*4), (97+gap*5):(97+8-1+gap*5), (97+8-1+5+gap*6):(110+gap*6), (115+gap*7):(115+gap*7)),
+       cex=fontsize,
        addcred=FALSE, level=95,
        )
 
 
 ### add text with Q-value, dfs, p-value, and I^2 statistic
-text(x_begin, -2.5, pos=4, cex=0.75, bquote(paste("RE for All Studies (Q = ",
+text(x_begin, -2.5, pos=4, cex=0.4, bquote(paste("RE for All Studies (Q = ",
      .(formatC(df.PR.rma$QE, digits=2, format="f")), ", df = ", .(df.PR.rma$k - df.PR.rma$p),
      ", p = ", .(formatC(df.PR.rma$QEp, digits=2, format="f")), "; ", I^2, " = ",
      .(formatC(df.PR.rma$I2, digits=1, format="f")), "%)")))
@@ -356,7 +388,7 @@ text(x_begin, -2.5, pos=4, cex=0.75, bquote(paste("RE for All Studies (Q = ",
 res <- rma(df.PR, mods = ~ Method)
 
 ### add text for the test of subgroup differences
-text(x_begin, -5.5, pos=4, cex=0.75, bquote(paste("Test for Subgroup Differences: ",
+text(x_begin, -5.5, pos=4, cex=0.4, bquote(paste("Test for Subgroup Differences: ",
      Q[M], " = ", .(formatC(res$QM, digits=2, format="f")), ", df = ", .(res$p - 1),
      ", p = ", .(formatC(res$QMp, digits=2, format="f")))))
 
@@ -365,7 +397,7 @@ text(x_begin, -5.5, pos=4, cex=0.75, bquote(paste("Test for Subgroup Differences
 op <- par(cex=0.75, font=4)
 
 ### add text for the subgroups
-text(x_begin, cex=0.5, c(26, 45, 63, 75, 93, 105, 111, 116), pos=4, c("ATL",
+text(x_begin, cex=0.45, c((26), (45+gap), (63+gap*2), (75+gap*3), (93+gap*4), (105+gap*5), (111+gap*6), (116+gap*7)), pos=4, c("ATL",
                                                              "Gamma Knife",
                                                              "LiTT",
                                                              "Radiofrequency",
@@ -408,53 +440,53 @@ res.SAH <- rma(df.PR, subset=(Method=="SAH_unspecified"))
 
  
 # ### add summary polygons for the subgroups
-addpoly(res.SAH, row=106.5, cex=0.3, mlab="")
-addpoly(res.ts, row= 94.5, cex=0.3, mlab="")
-addpoly(res.tc, row= 76.5, cex=0.3, mlab="")
-addpoly(res.rf, row= (49+13+2.5), cex=0.3, mlab="")
-addpoly(res.litt, row= 46.5, cex=0.3, mlab="")
-addpoly(res.gn, row=27.5, cex=0.3, mlab="")
-addpoly(res.atl, row=1, cex=0.3, mlab="")
+addpoly(res.SAH, row=(106.5+gap*6), cex=0.3, mlab="")
+addpoly(res.ts, row= (94.5+gap*5), cex=0.3, mlab="")
+addpoly(res.tc, row= (76.5+gap*4), cex=0.3, mlab="")
+addpoly(res.rf, row= (49+13+2.5+gap*3), cex=0.3, mlab="")
+addpoly(res.litt, row= (46.5+gap*2), cex=0.3, mlab="")
+addpoly(res.gn, row=(27.5+gap), cex=0.3, mlab="")
+addpoly(res.atl, row= 1, cex=0.3, mlab="")
 
 
 ### add text with Q-value, dfs, p-value, and I^2 statistic for subgroups. 2nd number is the row as above
-text(x_begin, 106.5, pos=4, cex=0.3, bquote(paste("RE Model for Subgroup (Q = ",
+text(x_begin, (106.5+gap*6), pos=4, cex=fontsize, bquote(paste("RE Model for Subgroup (Q = ",
      .(formatC(res.SAH$QE, digits=2, format="f")), ", df = ", .(res.SAH$k - res.SAH$p),
      ", p = ", .(formatC(res.SAH$QEp, digits=2, format="f")), "; ", I^2, " = ",
      .(formatC(res.SAH$I2, digits=1, format="f")), "%)")))
 
 res.s <- res.ts
-text(x_begin, 94.5, pos=4, cex=0.3, bquote(paste("RE Model for Subgroup (Q = ",
+text(x_begin, (94.5+gap*5), pos=4, cex=fontsize, bquote(paste("RE Model for Subgroup (Q = ",
      .(formatC(res.s$QE, digits=2, format="f")), ", df = ", .(res.s$k - res.s$p),
      ", p = ", .(formatC(res.s$QEp, digits=2, format="f")), "; ", I^2, " = ",
      .(formatC(res.s$I2, digits=1, format="f")), "%)")))
 
 res.s <- res.tc
-text(x_begin, 76.5, pos=4, cex=0.3, bquote(paste("RE Model for Subgroup (Q = ",
+text(x_begin, (76.5+gap*4), pos=4, cex=fontsize, bquote(paste("RE Model for Subgroup (Q = ",
      .(formatC(res.s$QE, digits=2, format="f")), ", df = ", .(res.s$k - res.s$p),
      ", p = ", .(formatC(res.s$QEp, digits=2, format="f")), "; ", I^2, " = ",
      .(formatC(res.s$I2, digits=1, format="f")), "%)")))
 
 res.s <- res.rf
-text(x_begin, (49+13+2.5), pos=4, cex=0.3, bquote(paste("RE Model for Subgroup (Q = ",
+text(x_begin, (49+13+2.5+gap*3), pos=4, cex=fontsize, bquote(paste("RE Model for Subgroup (Q = ",
      .(formatC(res.s$QE, digits=2, format="f")), ", df = ", .(res.s$k - res.s$p),
      ", p = ", .(formatC(res.s$QEp, digits=2, format="f")), "; ", I^2, " = ",
      .(formatC(res.s$I2, digits=1, format="f")), "%)")))
 
 res.s <- res.litt
-text(x_begin, 46.5, pos=4, cex=0.3, bquote(paste("RE Model for Subgroup (Q = ",
+text(x_begin, (46.5+gap*2), pos=4, cex=fontsize, bquote(paste("RE Model for Subgroup (Q = ",
      .(formatC(res.s$QE, digits=2, format="f")), ", df = ", .(res.s$k - res.s$p),
      ", p = ", .(formatC(res.s$QEp, digits=2, format="f")), "; ", I^2, " = ",
      .(formatC(res.s$I2, digits=1, format="f")), "%)")))
 
 res.s <- res.gn
-text(x_begin, 27.5, pos=4, cex=0.3, bquote(paste("RE Model for Subgroup (Q = ",
+text(x_begin, (27.5+gap), pos=4, cex=fontsize, bquote(paste("RE Model for Subgroup (Q = ",
      .(formatC(res.s$QE, digits=2, format="f")), ", df = ", .(res.s$k - res.s$p),
      ", p = ", .(formatC(res.s$QEp, digits=2, format="f")), "; ", I^2, " = ",
      .(formatC(res.s$I2, digits=1, format="f")), "%)")))
 
 res.s <- res.atl
-text(x_begin, 1, pos=4, cex=0.3, bquote(paste("RE Model for Subgroup (Q = ",
+text(x_begin, 1, pos=4, cex=fontsize, bquote(paste("RE Model for Subgroup (Q = ",
      .(formatC(res.s$QE, digits=2, format="f")), ", df = ", .(res.s$k - res.s$p),
      ", p = ", .(formatC(res.s$QEp, digits=2, format="f")), "; ", I^2, " = ",
      .(formatC(res.s$I2, digits=1, format="f")), "%)")))
