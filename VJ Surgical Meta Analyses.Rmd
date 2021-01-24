@@ -54,7 +54,7 @@ require(metafor)
 
 help(escalc)
 help(forest)
-help(rma)
+# help(rma)
 
 ```
 
@@ -143,11 +143,11 @@ https://stackoverflow.com/questions/57513712/does-metafor-package-in-r-provide-f
 
 
 ```{r}
-# funnel plots and save
-funnel(trimfill(df.radiofreq.PR.rma_mods), pch.fill = 21)
-trimfill(df.radiofreq.PR.rma_mods)
-dev.copy(device=svg, "Figures\\radiofreq_mods_trimfill.svg", width=8, height=5)
-dev.off()
+# # funnel plots and save
+# funnel(trimfill(df.radiofreq.PR.rma_mods), pch.fill = 21)
+# trimfill(df.radiofreq.PR.rma_mods)
+# dev.copy(device=svg, "Figures\\radiofreq_mods_trimfill.svg", width=8, height=5)
+# dev.off()
 ```
 
 
@@ -186,7 +186,7 @@ dev.off()
 
 
 https://www.metafor-project.org/doku.php/plots:forest_plot_with_subgroups
-```{r, fig.width=10, fig.height=15}
+```{r, fig.width=10, fig.height=14}
 
 # effect size calculation
 df.PR <- escalc(data=df, xi=SF, ni=Total, measure="PR")
@@ -206,7 +206,8 @@ forest(df.PR.rma,
        header=c("Surgical Methods", "Proportion Seizure Free [95% CI]"),
        mlab="",  #"Random Effects",
        order=df.PR.rma$Method,
-       # alim=c(0, 1), steps=6, xlim=c(-0.5, 1.5),
+       alim=c(0, 1), steps=6, xlim=c(-1.6, 1.5), ylim=c(-1, 85),
+       cex=0.7,
        )
 
 
@@ -216,11 +217,182 @@ overall_text <- text(-1.6, -1, pos=4, cex=0.75, bquote(paste("RE for All Studies
      ", p = ", .(formatC(df.PR.rma$QEp, digits=2, format="f")), "; ", I^2, " = ",
      .(formatC(df.PR.rma$I2, digits=1, format="f")), "%)")))
 
+### fit meta-regression model to test for subgroup differences
+res <- rma(df.PR, mods = ~ Method)
+
+### add text for the test of subgroup differences
+text(-1.6, -2.4, pos=4, cex=0.75, bquote(paste("Test for Subgroup Differences: ",
+     Q[M], " = ", .(formatC(res$QM, digits=2, format="f")), ", df = ", .(res$p - 1),
+     ", p = ", .(formatC(res$QMp, digits=2, format="f")))))
+
+### set font expansion factor (as in forest() above) and use bold italic
+### font and save original settings in object 'op'
+op <- par(cex=0.75, font=4)
+
+### add text for the subgroups
+text(-1.6, c(2.4, 1.6, 0.5), pos=4, c("Radiofrequency",
+                               "ATL",
+                               "Gamma Knife"))
+ 
+
+### switch to bold font
+par(font=2)
+ 
+# ...
 
 
+### set par back to the original settings
+par(op)
+ 
+### fit random-effects model in the three subgroups
+res.rf <- rma(df.PR, subset=(Method=="Radiofrequency"))
+res.atl <- rma(df.PR, subset=(Method=="ATL"))
+res.gn <- rma(df.PR, subset=(Method=="Gamma Knife"))
+
+### add summary polygons for the three subgroups
+addpoly(res.rf, row=18.5, cex=0.75, atransf=exp, mlab="")
+addpoly(res.atl, row= 7.5, cex=0.75, atransf=exp, mlab="")
+addpoly(res.gn, row= 1.5, cex=0.75, atransf=exp, mlab="")
 
 ## and save
 # dev.copy(device=svg, "Figures\\subplots_df.svg", width=10, height=8)
 # dev.off()
 ```
+
+
+check the order of the subgroups cf csv spreadsheet
+```{r}
+order(df.PR$Method)
+```
+therefore order is:
+ATL
+Gamma Knife
+LiTT
+RF
+transcortical
+transylvian
+unspecified
+Surgery 
+
+```{r, fig.width=10, fig.height=14}
+
+# effect size calculation
+df.PR <- escalc(data=df, xi=SF, ni=Total, measure="PR")
+
+# random effects model and moderators
+df.PR.rma <- rma(df.PR, slab=Study, method="REML", weighted=TRUE,
+                                # subset=df.PR$Method=="Radiofrequency",
+                 )
+
+
+# - gaps of 5
+# ATL 23
+# Gamma 15
+# LITT 14
+# RF 8
+# transcortical 14
+# transsylvian 8 
+# unspecified 2
+# Surgery 1
+
+
+
+
+
+#forest plots 
+forest(df.PR.rma, 
+       header=c("Surgical Methods", "Proportion Seizure Free [95% CI]"),
+       mlab="",  #"Random Effects",
+       ilab=cbind(df.PR$SF, df.PR$Total),
+       ilab.xpos=c(-9.5,-8),
+       order=order(df.PR$Method),
+       at=c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0), 
+       xlim=c(-2.5, 2), 
+       refline=NA,
+       # showweights = TRUE,
+       ylim=c(-1, 120),
+       rows=c(3:(3+22), 30:(30+14), 49:(49+13), (49+13+5):74, 79:92, 97:(97+8-1), (97+8-1+5):(110), 115:115),
+       cex=0.3,
+       addcred=TRUE, level=95,
+       )
+
+
+### add text with Q-value, dfs, p-value, and I^2 statistic
+overall_text <- text(-16, -1, pos=4, cex=0.75, bquote(paste("RE for All Studies (Q = ",
+     .(formatC(df.PR.rma$QE, digits=2, format="f")), ", df = ", .(df.PR.rma$k - df.PR.rma$p),
+     ", p = ", .(formatC(df.PR.rma$QEp, digits=2, format="f")), "; ", I^2, " = ",
+     .(formatC(df.PR.rma$I2, digits=1, format="f")), "%)")))
+
+### fit meta-regression model to test for subgroup differences
+res <- rma(df.PR, mods = ~ Method)
+
+### add text for the test of subgroup differences
+text(-16, -2.8, pos=4, cex=0.75, bquote(paste("Test for Subgroup Differences: ",
+     Q[M], " = ", .(formatC(res$QM, digits=2, format="f")), ", df = ", .(res$p - 1),
+     ", p = ", .(formatC(res$QMp, digits=2, format="f")))))
+
+## set font expansion factor (as in forest() above) and use bold italic
+## font and save original settings in object 'op'
+op <- par(cex=0.75, font=4)
+
+### add text for the subgroups
+text(-16, c(24, 16, 5), pos=4, c("Radiofrequency",
+                               "ATL",
+                               "Gamma Knife"))
+
+
+### switch to bold font
+par(font=2)
+
+
+
+# ...
+
+
+### set par back to the original settings
+par(op)
+#  
+### fit random-effects model in the three subgroups
+res.rf <- rma(df.PR, subset=(Method=="Radiofrequency"))
+res.atl <- rma(df.PR, subset=(Method=="ATL"))
+res.gn <- rma(df.PR, subset=(Method=="Gamma Knife"))
+# 
+# ### add summary polygons for the three subgroups
+# addpoly(res.rf, row=18.5, cex=0.75, atransf=exp, mlab="")
+# addpoly(res.atl, row= 7.5, cex=0.75, atransf=exp, mlab="")
+# addpoly(res.gn, row= 1.5, cex=0.75, atransf=exp, mlab="")
+
+# and save
+dev.copy(device=svg, "Figures\\subplots_df_PR.svg", width=10, height=8)
+dev.off()
+```
+
+
+
+
+
+```{r}
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
