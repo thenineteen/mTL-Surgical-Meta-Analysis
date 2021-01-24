@@ -1,0 +1,163 @@
+---
+title: "VJ Surgical Methods Meta Analyses"
+output: html_notebook
+---
+
+
+
+
+# Read in the data
+
+```{r}
+
+df <- read.csv('VJ_meta_analysis_data_preprocessing.csv')
+df
+```
+
+
+# Single Meta Analysis, Random-Effects, Inverse Variance
+
+```{r}
+df.radiofreq <- df[df['Method'] =='Radiofrequency', ]
+
+df.radiofreq
+```
+
+
+
+## metafor escalc
+
+To cite the package, please use the following reference:
+
+Viechtbauer, W. (2010). Conducting meta-analyses in R with the metafor package. Journal of Statistical Software, 36(3), 1–48. https://www.jstatsoft.org/v036/i03.
+
+
+Use help(escalc) and read subheading "Measures for Dichotomous Variables"
+Measures for Dichotomous Variables
+A meta-analysis may be conducted to aggregate studies that provide data for individual groups with respect to a dichotomous dependent variable. Here, one needs to specify xi and ni, denoting the number of individuals experiencing the event of interest and the total number of individuals, respectively. Instead of specifying ni, one can use mi to specify the number of individuals that do not experience the event of interest. The options for the measure argument are then:
+
+"PR" for the raw proportion.
+
+"PLN" for the log transformed proportion.
+
+"PLO" for the logit transformed proportion (i.e., log odds).
+
+"PAS" for the arcsine square root transformed proportion (i.e., the angular transformation).
+
+"PFT" for the Freeman-Tukey double arcsine transformed proportion (Freeman & Tukey, 1950).
+
+Zero cell entries can be problematic for certain outcome measures. When to="only0" (the default), the value of add (the default is 1/2; but see ‘Note’) is added to xi and mi only for studies where xi or mi is equal to 0. When to="all", the value of add is added to xi and mi in all studies. When to="if0all", the value of add is added in all studies, but only when there is at least one study with a zero value for xi or mi. Setting to="none" or add=0 has the same effect: No adjustment to the observed values is made. Depending on the outcome measure and the data, this may lead to division by zero inside of the function (when this occurs, the resulting value is recoded to NA).
+
+```{r}
+
+require(metafor)
+
+help(escalc)
+help(forest)
+help(rma)
+
+```
+
+
+```{r}
+df.radiofreq.PR <- escalc(data=df.radiofreq, xi=SF, ni=Total, measure="PR")
+
+df.radiofreq.PR
+```
+
+do the meta analysis using rma
+
+```{r}
+
+df.radiofreq.PR.rma <- rma(df.radiofreq.PR, slab=Study, method="REML", weighted=TRUE)
+```
+
+```{r}
+forestplot_radiofreq <- forest(df.radiofreq.PR.rma, 
+       header=c("Radiofrequency Study", "Proportion Seizure Free [95% CI]"),
+       mlab="Random Effects",
+       order=c(4,1,5, 2, 3, 6, 8,7),
+       alim=c(0, 1), steps=6, xlim=c(-0.5, 1.5),
+       )
+
+dev.copy(device=svg, "radiofreq.svg", width=8, height=5)
+dev.off()
+```
+```{r}
+funnel(df.radiofreq.PR.rma,
+       pch.fill=21,
+       )
+help(funnel)
+```
+
+
+```{r}
+funnel(trimfill(df.radiofreq.PR.rma), pch.fill = 21)
+trimfill(df.radiofreq.PR.rma)
+```
+
+
+
+
+
+
+
+
+
+
+# Adjustment / Moderators of follow-up duration
+
+```{r}
+
+# read subset of data
+df <- read.csv('VJ_meta_analysis_data_preprocessing.csv')
+df.radiofreq <- df[df['Method'] =='Radiofrequency', ]
+
+# effect size calculation
+require(metafor)
+df.radiofreq.PR <- escalc(data=df.radiofreq, xi=SF, ni=Total, measure="PR")
+
+# random effects model and moderators
+df.radiofreq.PR.rma_mods <- rma(df.radiofreq.PR, slab=Study, method="REML", weighted=TRUE,
+                                mods=Avg.FollowUp)
+
+```
+
+```{r}
+#forest plots and save
+forestplot_radiofreq <- forest(df.radiofreq.PR.rma_mods, 
+       header=c("Radiofrequency with Follow-up Duration as Moderator", "Seizure Freedom [95% CI]"),
+       mlab="Random Effects",
+       order=c(4,1,5, 2, 3, 6, 8,7),
+       alim=c(0, 1), steps=6, xlim=c(-0.5, 1.5),
+       )
+dev.copy(device=svg, "radiofreq_mods.svg", width=8, height=5)
+dev.off()
+
+```
+Caption: 
+he grey-colored diamonds (or polygons) are the fitted values and the width of the diamonds/polygons reflects the width of the CI for the fitted values.
+https://stackoverflow.com/questions/57513712/does-metafor-package-in-r-provide-forest-plot-for-robust-random-effects-models
+
+
+
+
+```{r}
+# funnel plots and save
+funnel(trimfill(df.radiofreq.PR.rma_mods), pch.fill = 21)
+trimfill(df.radiofreq.PR.rma_mods)
+dev.copy(device=svg, "radiofreq_mods_trimfill.svg", width=8, height=5)
+dev.off()
+```
+
+
+
+
+
+
+
+
+# Subplotting all methods
+
+
+
