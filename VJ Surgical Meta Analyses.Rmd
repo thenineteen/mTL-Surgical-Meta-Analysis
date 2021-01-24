@@ -80,7 +80,7 @@ forestplot_radiofreq <- forest(df.radiofreq.PR.rma,
        alim=c(0, 1), steps=6, xlim=c(-0.5, 1.5),
        )
 
-dev.copy(device=svg, "radiofreq.svg", width=8, height=5)
+dev.copy(device=svg, "Figures\\radiofreq.svg", width=8, height=5)
 dev.off()
 ```
 ```{r}
@@ -131,7 +131,7 @@ forestplot_radiofreq <- forest(df.radiofreq.PR.rma_mods,
        order=c(4,1,5, 2, 3, 6, 8,7),
        alim=c(0, 1), steps=6, xlim=c(-0.5, 1.5),
        )
-dev.copy(device=svg, "radiofreq_mods.svg", width=8, height=5)
+dev.copy(device=svg, "Figures\\radiofreq_mods.svg", width=8, height=5)
 dev.off()
 
 ```
@@ -146,7 +146,7 @@ https://stackoverflow.com/questions/57513712/does-metafor-package-in-r-provide-f
 # funnel plots and save
 funnel(trimfill(df.radiofreq.PR.rma_mods), pch.fill = 21)
 trimfill(df.radiofreq.PR.rma_mods)
-dev.copy(device=svg, "radiofreq_mods_trimfill.svg", width=8, height=5)
+dev.copy(device=svg, "Figures\\radiofreq_mods_trimfill.svg", width=8, height=5)
 dev.off()
 ```
 
@@ -160,4 +160,67 @@ dev.off()
 # Subplotting all methods
 
 
+```{r}
+
+# effect size calculation
+df.PR <- escalc(data=df, xi=SF, ni=Total, measure="PR")
+
+# random effects model and moderators
+df.PR.rma <- rma(df.PR, slab=Study, method="REML", weighted=TRUE,
+                                # subset=df.PR$Method=="Radiofrequency",
+                 )
+#forest plots and save
+forestplot_df <- forest(df.PR.rma, 
+       header=c("Surgical Methods", "Proportion Seizure Free [95% CI]"),
+       mlab="Random Effects",
+       order=df.PR.rma$Method,
+       # alim=c(0, 1), steps=6, xlim=c(-0.5, 1.5),
+       )
+dev.copy(device=svg, "Figures\\subplots_fail.svg", width=10, height=8)
+dev.off()
+```
+
+
+
+
+
+
+https://www.metafor-project.org/doku.php/plots:forest_plot_with_subgroups
+```{r, fig.width=10, fig.height=15}
+
+# effect size calculation
+df.PR <- escalc(data=df, xi=SF, ni=Total, measure="PR")
+
+# random effects model and moderators
+df.PR.rma <- rma(df.PR, slab=Study, method="REML", weighted=TRUE,
+                                # subset=df.PR$Method=="Radiofrequency",
+                 )
+
+
+
+
+
+
+#forest plots 
+forest(df.PR.rma, 
+       header=c("Surgical Methods", "Proportion Seizure Free [95% CI]"),
+       mlab="",  #"Random Effects",
+       order=df.PR.rma$Method,
+       # alim=c(0, 1), steps=6, xlim=c(-0.5, 1.5),
+       )
+
+
+### add text with Q-value, dfs, p-value, and I^2 statistic
+overall_text <- text(-1.6, -1, pos=4, cex=0.75, bquote(paste("RE for All Studies (Q = ",
+     .(formatC(df.PR.rma$QE, digits=2, format="f")), ", df = ", .(df.PR.rma$k - df.PR.rma$p),
+     ", p = ", .(formatC(df.PR.rma$QEp, digits=2, format="f")), "; ", I^2, " = ",
+     .(formatC(df.PR.rma$I2, digits=1, format="f")), "%)")))
+
+
+
+
+## and save
+# dev.copy(device=svg, "Figures\\subplots_df.svg", width=10, height=8)
+# dev.off()
+```
 
