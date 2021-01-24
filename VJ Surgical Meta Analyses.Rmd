@@ -186,6 +186,9 @@ dev.off()
 
 
 https://www.metafor-project.org/doku.php/plots:forest_plot_with_subgroups
+
+
+
 ```{r, fig.width=10, fig.height=14}
 
 # effect size calculation
@@ -264,7 +267,15 @@ check the order of the subgroups cf csv spreadsheet
 ```{r}
 order(df.PR$Method)
 ```
-therefore order is:
+
+
+
+
+# Main Subplots all-in-1
+
+
+
+therefore order is bottom to up:
 ATL
 Gamma Knife
 LiTT
@@ -274,7 +285,25 @@ transylvian
 unspecified
 Surgery 
 
-```{r, fig.width=10, fig.height=14}
+
+set the initial values:
+
+```{r}
+x_begin = -1.6
+y_begin = -1.5
+y_end = 120
+
+ilab_x_1 = -1
+ilab_x_2 = -0.8
+
+gap =0
+
+```
+
+
+do meta analysis and plot:
+
+```{r, fig.width=10, fig.height=30}
 
 # effect size calculation
 df.PR <- escalc(data=df, xi=SF, ni=Total, measure="PR")
@@ -301,24 +330,24 @@ df.PR.rma <- rma(df.PR, slab=Study, method="REML", weighted=TRUE,
 
 #forest plots 
 forest(df.PR.rma, 
-       header=c("Surgical Methods", "Proportion Seizure Free [95% CI]"),
+       header=c("Surgical Techniques and Studies", "Proportion Seizure Free [95% CI]", cex=2),
        mlab="",  #"Random Effects",
        ilab=cbind(df.PR$SF, df.PR$Total),
-       ilab.xpos=c(-9.5,-8),
+       ilab.xpos=c(ilab_x_1, ilab_x_2),
        order=order(df.PR$Method),
        at=c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0), 
-       xlim=c(-2.5, 2), 
+       xlim=c(x_begin, 1.5), 
        refline=NA,
        # showweights = TRUE,
-       ylim=c(-1, 120),
-       rows=c(3:(3+22), 30:(30+14), 49:(49+13), (49+13+5):74, 79:92, 97:(97+8-1), (97+8-1+5):(110), 115:115),
+       ylim=c(y_begin, y_end),
+       rows=c(3:(3+22), (30+gap):(30+14+gap), (49+gap):(49+13+gap), (49+13+5+gap):(74+gap), (79+gap):(92+gap), (97+gap):(97+8-1+gap), (97+8-1+5+gap):(110+gap), (115+gap):(115+gap)),
        cex=0.3,
-       addcred=TRUE, level=95,
+       addcred=FALSE, level=95,
        )
 
 
 ### add text with Q-value, dfs, p-value, and I^2 statistic
-overall_text <- text(-16, -1, pos=4, cex=0.75, bquote(paste("RE for All Studies (Q = ",
+text(x_begin, -2.5, pos=4, cex=0.75, bquote(paste("RE for All Studies (Q = ",
      .(formatC(df.PR.rma$QE, digits=2, format="f")), ", df = ", .(df.PR.rma$k - df.PR.rma$p),
      ", p = ", .(formatC(df.PR.rma$QEp, digits=2, format="f")), "; ", I^2, " = ",
      .(formatC(df.PR.rma$I2, digits=1, format="f")), "%)")))
@@ -327,7 +356,7 @@ overall_text <- text(-16, -1, pos=4, cex=0.75, bquote(paste("RE for All Studies 
 res <- rma(df.PR, mods = ~ Method)
 
 ### add text for the test of subgroup differences
-text(-16, -2.8, pos=4, cex=0.75, bquote(paste("Test for Subgroup Differences: ",
+text(x_begin, -5.5, pos=4, cex=0.75, bquote(paste("Test for Subgroup Differences: ",
      Q[M], " = ", .(formatC(res$QM, digits=2, format="f")), ", df = ", .(res$p - 1),
      ", p = ", .(formatC(res$QMp, digits=2, format="f")))))
 
@@ -336,34 +365,106 @@ text(-16, -2.8, pos=4, cex=0.75, bquote(paste("Test for Subgroup Differences: ",
 op <- par(cex=0.75, font=4)
 
 ### add text for the subgroups
-text(-16, c(24, 16, 5), pos=4, c("Radiofrequency",
-                               "ATL",
-                               "Gamma Knife"))
+text(x_begin, cex=0.5, c(26, 45, 63, 75, 93, 105, 111, 116), pos=4, c("ATL",
+                                                             "Gamma Knife",
+                                                             "LiTT",
+                                                             "Radiofrequency",
+                                                             "SAH Transcortical",
+                                                             "SAH Transsylvian",
+                                                             "SAH Unspecified",
+                                                             "Epilepsy Surgery - Any"))
 
 
 ### switch to bold font
 par(font=2)
 
 
-
-# ...
+### add column headings to the plot
+text(c(ilab_x_1,ilab_x_2), y_end-1, c("Seizure Free (Engel I)", "Total"), cex=0.5)
+# text(c(-8.75,-5.25),     27, c("Vaccinated"))
 
 
 ### set par back to the original settings
 par(op)
-#  
-### fit random-effects model in the three subgroups
+
+
+
+### fit random-effects model in the 7 subgroups excluding surgery
+# ATL
+# Gamma Knife
+# LiTT
+# RF
+# transcortical
+# transylvian
+# unspecified
+# Surgery 
 res.rf <- rma(df.PR, subset=(Method=="Radiofrequency"))
 res.atl <- rma(df.PR, subset=(Method=="ATL"))
 res.gn <- rma(df.PR, subset=(Method=="Gamma Knife"))
-# 
-# ### add summary polygons for the three subgroups
-# addpoly(res.rf, row=18.5, cex=0.75, atransf=exp, mlab="")
-# addpoly(res.atl, row= 7.5, cex=0.75, atransf=exp, mlab="")
-# addpoly(res.gn, row= 1.5, cex=0.75, atransf=exp, mlab="")
+res.litt <- rma(df.PR, subset=(Method=="LiTT"))
+res.tc <- rma(df.PR, subset=(Method=="SAH_transcortical"))
+res.ts <- rma(df.PR, subset=(Method=="SAH_transylvian"))
+res.SAH <- rma(df.PR, subset=(Method=="SAH_unspecified"))
+
+ 
+# ### add summary polygons for the subgroups
+addpoly(res.SAH, row=106.5, cex=0.3, mlab="")
+addpoly(res.ts, row= 94.5, cex=0.3, mlab="")
+addpoly(res.tc, row= 76.5, cex=0.3, mlab="")
+addpoly(res.rf, row= (49+13+2.5), cex=0.3, mlab="")
+addpoly(res.litt, row= 46.5, cex=0.3, mlab="")
+addpoly(res.gn, row=27.5, cex=0.3, mlab="")
+addpoly(res.atl, row=1, cex=0.3, mlab="")
+
+
+### add text with Q-value, dfs, p-value, and I^2 statistic for subgroups. 2nd number is the row as above
+text(x_begin, 106.5, pos=4, cex=0.3, bquote(paste("RE Model for Subgroup (Q = ",
+     .(formatC(res.SAH$QE, digits=2, format="f")), ", df = ", .(res.SAH$k - res.SAH$p),
+     ", p = ", .(formatC(res.SAH$QEp, digits=2, format="f")), "; ", I^2, " = ",
+     .(formatC(res.SAH$I2, digits=1, format="f")), "%)")))
+
+res.s <- res.ts
+text(x_begin, 94.5, pos=4, cex=0.3, bquote(paste("RE Model for Subgroup (Q = ",
+     .(formatC(res.s$QE, digits=2, format="f")), ", df = ", .(res.s$k - res.s$p),
+     ", p = ", .(formatC(res.s$QEp, digits=2, format="f")), "; ", I^2, " = ",
+     .(formatC(res.s$I2, digits=1, format="f")), "%)")))
+
+res.s <- res.tc
+text(x_begin, 76.5, pos=4, cex=0.3, bquote(paste("RE Model for Subgroup (Q = ",
+     .(formatC(res.s$QE, digits=2, format="f")), ", df = ", .(res.s$k - res.s$p),
+     ", p = ", .(formatC(res.s$QEp, digits=2, format="f")), "; ", I^2, " = ",
+     .(formatC(res.s$I2, digits=1, format="f")), "%)")))
+
+res.s <- res.rf
+text(x_begin, (49+13+2.5), pos=4, cex=0.3, bquote(paste("RE Model for Subgroup (Q = ",
+     .(formatC(res.s$QE, digits=2, format="f")), ", df = ", .(res.s$k - res.s$p),
+     ", p = ", .(formatC(res.s$QEp, digits=2, format="f")), "; ", I^2, " = ",
+     .(formatC(res.s$I2, digits=1, format="f")), "%)")))
+
+res.s <- res.litt
+text(x_begin, 46.5, pos=4, cex=0.3, bquote(paste("RE Model for Subgroup (Q = ",
+     .(formatC(res.s$QE, digits=2, format="f")), ", df = ", .(res.s$k - res.s$p),
+     ", p = ", .(formatC(res.s$QEp, digits=2, format="f")), "; ", I^2, " = ",
+     .(formatC(res.s$I2, digits=1, format="f")), "%)")))
+
+res.s <- res.gn
+text(x_begin, 27.5, pos=4, cex=0.3, bquote(paste("RE Model for Subgroup (Q = ",
+     .(formatC(res.s$QE, digits=2, format="f")), ", df = ", .(res.s$k - res.s$p),
+     ", p = ", .(formatC(res.s$QEp, digits=2, format="f")), "; ", I^2, " = ",
+     .(formatC(res.s$I2, digits=1, format="f")), "%)")))
+
+res.s <- res.atl
+text(x_begin, 1, pos=4, cex=0.3, bquote(paste("RE Model for Subgroup (Q = ",
+     .(formatC(res.s$QE, digits=2, format="f")), ", df = ", .(res.s$k - res.s$p),
+     ", p = ", .(formatC(res.s$QEp, digits=2, format="f")), "; ", I^2, " = ",
+     .(formatC(res.s$I2, digits=1, format="f")), "%)")))
+
+
+
+
 
 # and save
-dev.copy(device=svg, "Figures\\subplots_df_PR.svg", width=10, height=8)
+dev.copy(device=svg, "Figures\\MAIN_subplots_v2.svg", width=10, height=8)
 dev.off()
 ```
 
@@ -373,7 +474,7 @@ dev.off()
 
 ```{r}
 
-
+length(c(3:(3+22), 30+gap:(30+14+gap), 49+gap:(49+13+gap), (49+13+5+gap):(74+gap), (79+gap):(92+gap), (97+gap):(97+8-1+gap), (97+8-1+5+gap):(110+gap), (115+gap):(115+gap)))
 ```
 
 
@@ -381,6 +482,9 @@ dev.off()
 
 
 
+```{bash}
+git push -f
+```
 
 
 
