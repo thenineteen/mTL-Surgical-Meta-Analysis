@@ -321,8 +321,8 @@ x_begin = -1.6
 y_begin = -1.5
 y_end = 120
 
-ilab_x_1 = -1
-ilab_x_2 = -0.8
+ilab_x_1 = -0.7
+ilab_x_2 = -0.4
 
 gap =5
 
@@ -342,7 +342,8 @@ df.PR <- escalc(data=df, xi=SF, ni=Total, measure="PR")
 
 # random effects model and moderators
 df.PR.rma <- rma(df.PR, slab=Study, method="REML", weighted=TRUE,
-                                # subset=df.PR$Method=="Radiofrequency",
+                # subset=df.PR$Method=="Radiofrequency",
+                 # mods=Avg.FollowUp
                  )
 
 
@@ -375,6 +376,7 @@ forest(df.PR.rma,
        rows=c(3:(3+22), (30+gap):(30+14+gap), (49+gap*2):(49+13+gap*2), (49+13+5+gap*3):(74+gap*3), (79+gap*4):(92+gap*4), (97+gap*5):(97+8-1+gap*5), (97+8-1+5+gap*6):(110+gap*6), (115+gap*7):(115+gap*7)),
        cex=fontsize,
        addcred=FALSE, level=95,
+
        )
 
 
@@ -496,7 +498,7 @@ text(x_begin, 1, pos=4, cex=fontsize, bquote(paste("RE Model for Subgroup (Q = "
 
 
 # and save
-dev.copy(device=svg, "Figures\\MAIN_subplots_v2.svg", width=10, height=8)
+dev.copy(device=svg, "Figures\\test.svg", width=6, height=8)
 dev.off()
 ```
 
@@ -520,14 +522,66 @@ git push -f
 
 
 
+Funnel plot from above - doesn't wowrk without logit transform
+
+```{r}
+
+# this doesn't work ? needs to be logit transformed
+# funnel plots and save
+
+
+funnel(trimfill(df.PR.rma, ilim=c(0,1)), pch.fill = 21, legend=TRUE)
+trimfill(df.PR.rma, ilim = c(0,1))
+
+dev.copy(device=svg, "Figures\\TrimFill_Proportion.svg", width=7, height=4)
+dev.off()
+```
+
+
+now Funnel Plot Logit transform
+
+```{r}
+df
+```
+
+
+
+```{r}
+df.PLO <- escalc(data=df, measure="PLO", xi=SF, ni=Total)
+
+# # rf
+# df.PLO.rf <- rma(df.PLO, subset=df.PLO$Method=="Radiofrequency")
+# funnel(trimfill(df.PLO.rf), pch.fill = 21, legend=TRUE, col="red", xlab="RF Log Odds of SF")
+# 
+# # atl
+# df.PLO.atl <- rma(df.PLO, subset=df.PLO$Method=="ATL")
+# funnel(trimfill(df.PLO.atl), pch.fill = 21, legend=TRUE, col="blue", xlab="ATL Log Odds of SF")
+
+
+# all
+df.PLO.rma <- rma(df.PLO)
+funnel(trimfill(df.PLO.rma), pch.fill=21, legend=TRUE, 
+       # col=c(df$colour),
+       # pch=(c(1,2,3,4,5,6,7)),
+       xlab="Log Odds of SF")
 
 
 
 
 
+trimfill(df.PLO.rma, ilim = c(0,1))
+
+dev.copy(device=svg, "Figures\\TrimFill_LogOdds.svg", width=7, height=4)
+dev.off()
+
+```
 
 
 
+
+```{r}
+fi
+```
 
 
 
